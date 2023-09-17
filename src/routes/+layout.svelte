@@ -1,5 +1,5 @@
 <script>
-    import { onMount } from "svelte";
+    import { onMount, setContext } from "svelte";
     import "../app.css";
     import { auth } from "../lib/firebase/firebase";
     import { getDoc, doc } from "firebase/firestore";
@@ -8,7 +8,6 @@
     
 
     onMount(async ()=>{
-      
       let uid = localStorage.getItem("userId");
       if(uid){
         await getDoc(doc(db, "users", uid))
@@ -25,6 +24,8 @@
         window.location.href = '/chat';
       }
     })
+    
+    export let fillColor = '#0f0';
   </script>
 
   <svelte:head>
@@ -143,7 +144,7 @@
       </div>
     </div>
 
-  <slot />
+  <slot fill={fillColor}/>
 
   </div>
 

@@ -1,6 +1,7 @@
 
 <script>
     import { getAuth } from 'firebase/auth';
+    import { authHandlers} from "../store/store";
     import { generateUsername } from "unique-username-generator";
     import Draggable from '$lib/components/Draggable.svelte';
     import signOnLogo from '$lib/images/signonLogo.png';
@@ -24,29 +25,28 @@
     const auth = getAuth();
     
     let loginAction = async () => {
-        if(screenName.length > 0 && password.length > 0){
+        if(screenName.length > 0 && password){
             try{
                 await authHandlers.login(screenName, password);
-                //window.location.href = '/chat';
+                window.location.href = '/chat';
             }catch(err){
-                alert("There was an unexpected error logging in. Please try again.");
-                console.log(err)
+                alert(err);
             }
         }
     }
     
 
     const registerAction = async() => {
-       if (password.length >= 6 && password === passwordCheck){
+       if (password.length >= 6 && password === checkPassword){
         try{
             const user = await authHandlers.register(screenName, password);
-            //window.location.href = '/chat';
+            window.location.href = '/chat';
         }catch(err){
             console.log(err)
         }
         }else if(password.length >= 6 === false){
            alert("Password must be at least 6 characters long");
-       } else if (password !== passwordCheck){
+       } else if (password !== checkPassword){
            alert("Passwords do not match");
        }
     }
@@ -102,7 +102,7 @@
 
             <div class="field-row-stacked input">
                 <label for="confirmPassword" class="mt-2">Confirm Password</label>
-                <input id="confirmPassword" type="password" bind:value={password} />
+                <input id="confirmPassword" type="password" bind:value={checkPassword} />
             </div>
 
             <div class="field-row flex justify-end checks">
@@ -116,7 +116,7 @@
                     <img on:click={switchMode} src={setup} alt="" class="w-auto h-12 icon">
                 </div>
 
-                <img on:click={loginAction} src={signon} alt="" class="w-auto h-14 icon">
+                <img on:click={registerAction} src={signon} alt="" class="w-auto h-14 icon">
             </div>
 
 
@@ -154,7 +154,7 @@
 
         <div class="field-row-stacked input">
             <label for="password" class="mt-2">Password</label>
-            <input id="password" type="password" bind:value={checkPassword} />
+            <input id="password" type="password" bind:value={password} />
         </div>
 
         <a href="" class="underline ml-6 link text-blue-700">Forgot Password?</a>

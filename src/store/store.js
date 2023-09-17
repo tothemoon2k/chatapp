@@ -26,6 +26,7 @@ export const authHandlers = {
       
       
       localStorage.setItem("userId", registerUser.uid);
+      localStorage.setItem("screenName", screenName);
 
 
       return registerUser;
@@ -34,12 +35,13 @@ export const authHandlers = {
       console.log(error);
     }
   },
-  login: async (email, password) => {
-    const data = await signInWithEmailAndPassword(auth, `${email}@company.com`, password);
+  login: async (screenName, password) => {
+    const data = await signInWithEmailAndPassword(auth, `${screenName}@company.com`, password);
     await updateDoc(doc(db, "users", data.user.uid), {
       lastLogin: serverTimestamp()
     });
     localStorage.setItem("userId", data.user.uid);
+    localStorage.setItem("screenName", screenName);
   },
   logout: async () => {
     await signOut(auth);
