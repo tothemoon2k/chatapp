@@ -1,245 +1,146 @@
 <script>
-  import { onMount } from "svelte";
-  import { db } from "../../lib/firebase/firebase";
-  import ChatWindow from "$lib/components/ChatWindow.svelte";
-  import {
-    setDoc,
-    addDoc,
-    updateDoc,
-    collection,
-    getDocs,
-    query,
-    where,
-  } from "firebase/firestore";
-  import Draggable from "$lib/components/Draggable.svelte";
-  let screenName = "";
-  let value = "";
-  let messageData = [];
-  let chatsHAA = [];
-  let currentChat;
-
-  onMount(() => {
-    screenName = localStorage.getItem("screenName");
-  });
-
-  const addedMessage = (e, val) => {
-    e.preventDefault();
-    const message = { text: val, id: messageData.length };
-    messageData.push(message);
-    value = "";
-  };
-
-  const handleChange = (event) => {
-    value = event.target.value;
-  };
-
-  let buddyTab = "online";
-
-  let buddyTabClick = (tab) => {
-    buddyTab = tab;
-  };
-
-  let newChatScreenName = "";
-  let newChatMessage = "";
-
-  function compareByLength(str1, str2) {
-        return str1.length - str2.length;
-      }
-
-  let sendNewChat = async () => {
-    try {
-      if (newChatScreenName === "" || newChatMessage === "") {
-        alert("Please enter a screen name and message");
-        return;
-      }
-
-      let userQuery = query(collection(db, "users"));
-      userQuery = query(
-        userQuery,
-        where("screenName", "==", newChatScreenName)
+    import { onMount, afterUpdate } from 'svelte';
+    import { db } from '../firebase/firebase';
+    import {
+      collection,
+      updateDoc,
+      doc,
+      arrayUnion,
+      where,
+      query,
+      getDoc,
+      getDocs,
+      onSnapshot
+    } from 'firebase/firestore';
+  
+    export let otherUser;
+  
+    let screenName;
+    let chatId;
+    let messages = [];
+    let message;
+  
+    function compareByLength(str1, str2) {
+      return str1.length - str2.length;
+    }
+  
+    onMount(() => {
+      screenName = localStorage.getItem('screenName');
+      const unsubscribe = onSnapshot(
+        query(
+          collection(db, 'chats'),
+          where('users', '==', [screenName, otherUser].slice().sort(compareByLength))
+        ),
+        (snapshot) => {
+          snapshot.docChanges().forEach((change) => {
+            console.log(change, 'change');
+            const data = change.doc.data();
+            messages = data.messages;
+          });
+        }
       );
-
-      // Execute the query
-      const userQuerySnapshot = await getDocs(userQuery);
-
-      if (userQuerySnapshot.size === 0) {
-        alert(
-          "Please double-check the screen name, we could not find that user"
-        );
-        return;
-      }
-
-      let chatsQuery = query(collection(db, "chats"));
+  
+      // Clean up the listener when the component is unmounted
+      return () => {
+        unsubscribe();
+      };
+    });
+  
+    async function fetchData(screenName) {
+      if (!screenName) return;
+      let chatsQuery = query(collection(db, 'chats'));
       chatsQuery = query(
         chatsQuery,
-        where(
-          "users",
-          "==",
-          [screenName, newChatScreenName].slice().sort(compareByLength)
-        )
+        where('users', '==', [screenName, otherUser].slice().sort(compareByLength))
       );
-
-      // Execute the query
       const chatsQuerySnapshot = await getDocs(chatsQuery);
-
-      if (chatsQuerySnapshot.size > 0) {
-        console.log(chatsQuerySnapshot.size);
-        alert("Chat already exists");
-        return;
-      }
-
-      const docRef = await addDoc(collection(db, "chats"), {
-        users: [screenName, newChatScreenName].slice().sort(compareByLength),
-        messages: [screenName + ": " + newChatMessage],
-      });
-    } catch (error) {
-      console.error("An error occurred:", error);
+      chatId = chatsQuerySnapshot.docs[0].id;
     }
-  };
-
-  let getMessages = async (screenName) => {
-      let chatsQuery = query(collection(db, 'chats'))
-      chatsQuery = query(chatsQuery, where('users', 'array-contains', screenName))
-      await getDocs(chatsQuery).then((querySnapshot) => {
-        querySnapshot.forEach((doc) => {
-          let data = doc.data()
-          const otherScreenName = data.users.find(user => user !== screenName);
-          const latestMessage = data.messages[data.messages.length - 1];
-          const [senderName, messageContent] = latestMessage.split(": ");
-          chatsHAA.push({otherPerson: otherScreenName, latestSender: senderName, latestMessage: messageContent})
-        });
-      });
-    }
-
+  
     $: {
-    if (screenName) {
-      getMessages(screenName);
+      fetchData(screenName);
     }
-  }
+  
+    let sendMessage = async () => {
+      await updateDoc(doc(db, 'chats', chatId), {
+        messages: arrayUnion(`${screenName}: ${message}`)
+      });
+    };
+  
+    function getUsername(message) {
+      return message.split(':')[0];
+    }
+  
+    // Trigger fetchData when otherUser changes
+    afterUpdate(() => {
+      fetchData(screenName);
+    });
+  </script>
 
-  let setCurrentChat = (chat) => {
-    currentChat = null;
-
-    setTimeout(() => {
-      currentChat = chat;
-    }, 50);
-  }
-</script>
-
-{#if currentChat}
-  <Draggable>
-    <ChatWindow otherUser={currentChat}/>
-  </Draggable>
-{/if}
-
-
-<Draggable>
-  <div class="instant-messenger2 absolute">
+<img
+    class="w-screen h-screen absolute"
+    src="https://d7hftxdivxxvm.cloudfront.net/?quality=80&resize_to=width&src=https%3A%2F%2Fartsy-media-uploads.s3.amazonaws.com%2F2RNK1P0BYVrSCZEy_Sd1Ew%252F3417757448_4a6bdf36ce_o.jpg&width=910"
+    alt=""
+  />
+  <div class="instant-messenger absolute">
     <div class="title-bar">
-      <div class="title-bar-text">A Complete Window</div>
-      <div class="title-bar-controls">
-        <button aria-label="Minimize" />
-        <button aria-label="Maximize" />
-        <button aria-label="Close" />
+        <div class="title-bar-text">{otherUser} - Instant Message</div>
+        <div class="title-bar-controls">
+          <button aria-label="Close"></button>
+        </div>
       </div>
-    </div>
 
-    <div class="flex justify-around">
-      <p>My Aim</p>
-      <p>Friends</p>
-      <p>Help</p>
-    </div>
+    <nav class="nav">
+      <ul class="nav__list">
+        <li class="nav__item">File</li>
+        <li class="nav__item">Edit</li>
+        <li class="nav__item">Insert</li>
+      </ul>
+    </nav>
 
-    <div class="w-full flex justify-center items-center">
-      <hr class="border border-gray-500" />
-    </div>
+    <div class="message-list">
+      <div class="message-list__container">
+        {#each messages as message}
+            <div class='message-item'>
+                {#if getUsername(message) === screenName}
+                <span class="text-black screenName">{getUsername(message)}</span>
+                {:else}
+                <span class="text-red-600 screenName">{getUsername(message)}</span>
+                {/if}
 
-    <img
-      class="w-5/6"
-      src="https://news.northeastern.edu/wp-content/uploads/2017/11/aim-story-header-02.jpg"
-      alt=""
-    />
-
-    <menu role="tablist">
-      <li
-        role="tab"
-        aria-selected={`${buddyTab === "online" ? "true" : ""}`}
-        on:click={() => buddyTabClick("online")}
-      >
-        <a href="#tabs">Online</a>
-      </li>
-      <li
-        role="tab"
-        aria-selected={`${buddyTab === "setup" ? "true" : ""}`}
-        on:click={() => {
-          buddyTabClick("setup");
-        }}
-      >
-        <a href="#tabs">List Setup</a>
-      </li>
-    </menu>
-    <div class="window" role="tabpanel">
-      <div class="window-body">
-        {#if buddyTab === "online"}
-          {#each chatsHAA as chat (chat.latestMessage)}
-            <div on:click={() => setCurrentChat(chat.otherPerson)}>
-              <div class="title-bar-text t-b">{chat.otherPerson}</div>
-              <p>{chat.latestSender === screenName ? "You" : chat.latestSender}: {chat.latestMessage}</p>
+                <span>: {message.split(":")[1]}</span>
             </div>
-          {/each}
-        {:else if buddyTab === "setup"}
-          <h1>
-            All you need to start a new chat is the other persons screen name
-          </h1>
-          <input
-            type="text"
-            placeholder="Their ScreenName"
-            bind:value={newChatScreenName}
-          />
-          <input
-            type="text"
-            placeholder="Message"
-            bind:value={newChatMessage}
-          />
-          <button on:click={sendNewChat}>Send Message</button>
-        {/if}
+        {/each}
       </div>
     </div>
+
+    <div class="customize-row">
+      <div class="customize-row__set">
+        
+      </div>
+    </div>
+
+    <form
+      class="message-form"
+      on:submit|preventDefault
+    >
+      <textarea class="message-form__textarea" bind:value={message}/>
+      <div class="message-form__actions">
+        <button
+          type="button"
+          on:click={sendMessage}
+          class={`message-form__submit`}
+        />
+      </div>
+    </form>
   </div>
-</Draggable>
 
-<style lang="scss">
-  .t-b{
-    font-size: 12px;
-    color: black;
-  }
-
-  html,
-  body {
-    position: relative;
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    font-family: "Arial";
-  }
-
-  body {
-    background: url("http://wallpapercave.com/wp/pBHbmte.jpg");
-    background-size: cover;
-    background-position: left center;
-    background-repeat: no-repeat;
-  }
-
-  button {
-    cursor: pointer;
-
-    &:focus {
-      outline: none;
+  <style lang="scss">
+    .screenName{
+        font-weight: bold;
     }
-  }
 
-  .instant-messenger {
+    .instant-messenger {
     width: 500px;
     border: 1px solid gray;
     background: #d6d6ce;
@@ -439,4 +340,4 @@
       box-shadow: none;
     }
   }
-</style>
+  </style>
