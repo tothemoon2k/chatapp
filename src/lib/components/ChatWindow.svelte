@@ -1,4 +1,5 @@
 <script>
+    import { v4 as uuidv4 } from 'uuid';
     import { onMount, afterUpdate } from 'svelte';
     import { db } from '../firebase/firebase';
     import {
@@ -19,6 +20,7 @@
     let chatId;
     let messages = [];
     let message;
+    let messageListContainer;
   
     function compareByLength(str1, str2) {
       return str1.length - str2.length;
@@ -33,9 +35,12 @@
         ),
         (snapshot) => {
           snapshot.docChanges().forEach((change) => {
-            console.log(change, 'change');
             const data = change.doc.data();
-            messages = data.messages;
+            messages = data.messages.slice(-100);
+            messageListContainer = document.querySelector('.message-list__container');
+            setTimeout(() => {
+              messageListContainer.scrollTop = messageListContainer.scrollHeight;
+            }, 100);
           });
         }
       );
@@ -62,9 +67,18 @@
     }
   
     let sendMessage = async () => {
-      await updateDoc(doc(db, 'chats', chatId), {
-        messages: arrayUnion(`${screenName}: ${message}`)
-      });
+        if (!message){
+            alert('Please enter a message');
+            return;
+        }
+
+        await updateDoc(doc(db, 'chats', chatId), {
+            messages: arrayUnion(`${screenName}: ${message}, ${uuidv4()}`)
+        });
+
+        message = '';
+
+        messageListContainer.scrollTop = messageListContainer.scrollHeight;
     };
   
     function getUsername(message) {
@@ -100,17 +114,17 @@
 
     <div class="message-list">
       <div class="message-list__container">
-        {#each messages as message}
-            <div class='message-item'>
-                {#if getUsername(message) === screenName}
-                <span class="text-black screenName">{getUsername(message)}</span>
-                {:else}
-                <span class="text-red-600 screenName">{getUsername(message)}</span>
-                {/if}
+            {#each messages as message}
+                <div class='message-item'>
+                    {#if getUsername(message) === screenName}
+                    <span class="text-black screenName">{getUsername(message)}</span>
+                    {:else}
+                    <span class="text-red-600 screenName">{getUsername(message)}</span>
+                    {/if}
 
-                <span>: {message.split(":")[1]}</span>
-            </div>
-        {/each}
+                    <span>: {message.split(":")[1].split(",")[0].trim()}</span>
+                </div>
+            {/each}
       </div>
     </div>
 

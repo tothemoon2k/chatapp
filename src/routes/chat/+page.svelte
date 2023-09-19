@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte";
-  import { db } from "../../lib/firebase/firebase";
+  import { db } from "$lib/firebase/firebase";
   import ChatWindow from "$lib/components/ChatWindow.svelte";
   import {
     setDoc,
@@ -10,6 +10,8 @@
     getDocs,
     query,
     where,
+    doc,
+    onSnapshot,
   } from "firebase/firestore";
   import Draggable from "$lib/components/Draggable.svelte";
   let screenName = "";
@@ -20,6 +22,47 @@
 
   onMount(() => {
     screenName = localStorage.getItem("screenName");
+
+    const unsubscribe = onSnapshot(
+        query(
+          collection(db, 'chats'),
+          where('users', 'array-contains', screenName)
+        ),
+        (snapshot) => {
+          snapshot.docChanges().forEach((change) => {
+            const data = change.doc.data();
+            const otherScreenName = data.users.find(user => user !== screenName);
+            const latestMessage = data.messages[data.messages.length - 1];
+            const [senderName, messageContent] = latestMessage.split(": ");
+            let chatExists = false;
+
+            for (let i = 0; i < chatsHAA.length; i++) {
+              if (chatsHAA[i].otherPerson === otherScreenName) {
+                chatsHAA[i].latestSender = senderName;
+                chatsHAA[i].latestMessage = messageContent;
+                chatExists = true;
+                chatsHAA = chatsHAA;
+                break;
+              }
+            }
+
+            if (!chatExists) {
+              chatsHAA.push({
+                otherPerson: otherScreenName,
+                latestSender: senderName,
+                latestMessage: messageContent
+              });
+              chatsHAA = chatsHAA;
+            }
+
+          });
+        }
+      );
+  
+      // Clean up the listener when the component is unmounted
+      return () => {
+        unsubscribe();
+      };
   });
 
   const addedMessage = (e, val) => {
@@ -97,26 +140,6 @@
     }
   };
 
-  let getMessages = async (screenName) => {
-      let chatsQuery = query(collection(db, 'chats'))
-      chatsQuery = query(chatsQuery, where('users', 'array-contains', screenName))
-      await getDocs(chatsQuery).then((querySnapshot) => {
-        querySnapshot.forEach((doc) => {
-          let data = doc.data()
-          const otherScreenName = data.users.find(user => user !== screenName);
-          const latestMessage = data.messages[data.messages.length - 1];
-          const [senderName, messageContent] = latestMessage.split(": ");
-          chatsHAA.push({otherPerson: otherScreenName, latestSender: senderName, latestMessage: messageContent})
-        });
-      });
-    }
-
-    $: {
-    if (screenName) {
-      getMessages(screenName);
-    }
-  }
-
   let setCurrentChat = (chat) => {
     currentChat = null;
 
@@ -166,7 +189,7 @@
         aria-selected={`${buddyTab === "online" ? "true" : ""}`}
         on:click={() => buddyTabClick("online")}
       >
-        <a href="#tabs">Online</a>
+        <a href="#tabs">Chats</a>
       </li>
       <li
         role="tab"
@@ -175,7 +198,7 @@
           buddyTabClick("setup");
         }}
       >
-        <a href="#tabs">List Setup</a>
+        <a href="#tabs">New Chat</a>
       </li>
     </menu>
     <div class="window" role="tabpanel">
@@ -184,7 +207,7 @@
           {#each chatsHAA as chat (chat.latestMessage)}
             <div on:click={() => setCurrentChat(chat.otherPerson)}>
               <div class="title-bar-text t-b">{chat.otherPerson}</div>
-              <p>{chat.latestSender === screenName ? "You" : chat.latestSender}: {chat.latestMessage}</p>
+              <p>{chat.latestSender === screenName ? "You" : chat.latestSender}: {chat.latestMessage.split(',')[0].trim()}</p>
             </div>
           {/each}
         {:else if buddyTab === "setup"}
