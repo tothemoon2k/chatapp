@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { db } from "$lib/firebase/firebase";
   import ChatWindow from "$lib/components/ChatWindow.svelte";
+  import chatSidebar from "$lib/images/chatSidebar.png";
   import {
     setDoc,
     addDoc,
@@ -96,6 +97,11 @@
         return;
       }
 
+      if(newChatScreenName === screenName) {
+        alert("Unfortunately you cannot message yourself");
+        return;
+      }
+
       let userQuery = query(collection(db, "users"));
       userQuery = query(
         userQuery,
@@ -159,7 +165,7 @@
 <Draggable>
   <div class="instant-messenger2 absolute">
     <div class="title-bar">
-      <div class="title-bar-text">A Complete Window</div>
+      <div class="title-bar-text ml-1 gap-2 flex items-center"><img src={chatSidebar} class="h-5" alt="">{screenName}</div>
       <div class="title-bar-controls">
         <button aria-label="Minimize" />
         <button aria-label="Maximize" />
@@ -167,18 +173,18 @@
       </div>
     </div>
 
-    <div class="flex justify-around">
-      <p>My Aim</p>
-      <p>Friends</p>
-      <p>Help</p>
+    <div class="flex justify-around mt-1">
+      <p class="w-1/3 flex justify-center hover:bg-gray-400 hover:cursor-pointer">My Aim</p>
+      <p class="w-1/3 flex justify-center hover:bg-gray-400 hover:cursor-pointer">Friends</p>
+      <p class="w-1/3 flex justify-center hover:bg-gray-400 hover:cursor-pointer">Help</p>
     </div>
 
-    <div class="w-full flex justify-center items-center">
-      <hr class="border border-gray-500" />
+    <div class="w-full flex justify-center items-center mt-1 mb-1.5">
+      <hr class="border border-gray-400 w-full mx-2" />
     </div>
 
     <img
-      class="w-5/6"
+      class="w-5/6 mx-auto mt-1 mb-3"
       src="https://news.northeastern.edu/wp-content/uploads/2017/11/aim-story-header-02.jpg"
       alt=""
     />
@@ -201,28 +207,33 @@
         <a href="#tabs">New Chat</a>
       </li>
     </menu>
-    <div class="window" role="tabpanel">
-      <div class="window-body">
+    <div class="window flex justify-center" role="tabpanel">
+      <div class="window-body w-full flex justify-center flex-col">
         {#if buddyTab === "online"}
+        <p class="font-bold chat-bt mb-1.5">Chats</p>
+        {#if !chatsHAA.length}
+          <h1 class="text-center my-4">Your Messages Will Appear Here</h1>
+        {/if}
+
           {#each chatsHAA as chat (chat.latestMessage)}
-            <div on:click={() => setCurrentChat(chat.otherPerson)}>
+            <div class=" w-full py-2 px-2 mb-3 darkfr hover:cursor-pointer" on:click={() => setCurrentChat(chat.otherPerson)}>
               <div class="title-bar-text t-b">{chat.otherPerson}</div>
-              <p>{chat.latestSender === screenName ? "You" : chat.latestSender}: {chat.latestMessage.split(',')[0].trim()}</p>
+              <p class="message-size">{chat.latestSender === screenName ? "You" : chat.latestSender}: {chat.latestMessage.split(',')[0].trim()}</p>
             </div>
           {/each}
         {:else if buddyTab === "setup"}
-          <h1>
-            All you need to start a new chat is the other persons screen name
-          </h1>
+          <h5 class="font-medium mb-1.5 mt-1">All you need to start a new chat is the other persons screen name</h5>
           <input
             type="text"
             placeholder="Their ScreenName"
             bind:value={newChatScreenName}
+            class="mt-1 mb-1.5"
           />
           <input
             type="text"
             placeholder="Message"
             bind:value={newChatMessage}
+            class="mb-3"
           />
           <button on:click={sendNewChat}>Send Message</button>
         {/if}
@@ -232,9 +243,21 @@
 </Draggable>
 
 <style lang="scss">
+  .darkfr{
+    background-color:#a7a7a7;
+  }
+
+  .chat-bt{
+    font-size: 1rem;
+  }
+
   .t-b{
-    font-size: 12px;
+    font-size: 0.75rem;
     color: black;
+  }
+
+  .message-size{
+    font-size: 0.7rem;
   }
 
   html,
@@ -244,7 +267,7 @@
     padding: 0;
     width: 100%;
     height: 100%;
-    font-family: "Arial";
+    font-family: 'VT323', monospace;
   }
 
   body {
@@ -275,7 +298,7 @@
   }
 
   .instant-messenger2 {
-    width: 320px;
+    width: 220px;
     border: 1px solid gray;
     background: #d6d6ce;
     padding: 1px;

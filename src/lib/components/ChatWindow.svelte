@@ -89,18 +89,17 @@
     afterUpdate(() => {
       fetchData(screenName);
     });
+
+    const closeWindow = () => {
+        document.querySelector('.instant-messenger').style.display = 'none';
+    }
   </script>
 
-<img
-    class="w-screen h-screen absolute"
-    src="https://d7hftxdivxxvm.cloudfront.net/?quality=80&resize_to=width&src=https%3A%2F%2Fartsy-media-uploads.s3.amazonaws.com%2F2RNK1P0BYVrSCZEy_Sd1Ew%252F3417757448_4a6bdf36ce_o.jpg&width=910"
-    alt=""
-  />
-  <div class="instant-messenger absolute">
+  <div class="instant-messenger absolute z-10 mt-20 ml-20">
     <div class="title-bar">
         <div class="title-bar-text">{otherUser} - Instant Message</div>
         <div class="title-bar-controls">
-          <button aria-label="Close"></button>
+          <button aria-label="Close" on:click={closeWindow}></button>
         </div>
       </div>
 

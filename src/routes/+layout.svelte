@@ -25,7 +25,7 @@
       }
     })
     
-    export let fillColor = '#0f0';
+
 
     let currentTime = new Date();
     let hours = currentTime.getHours();
@@ -168,7 +168,6 @@
 
     body {
       background: black;
-      font-family: Tahoma;
     }
 
     .monitor {
