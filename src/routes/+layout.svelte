@@ -26,6 +26,10 @@
     })
     
     export let fillColor = '#0f0';
+
+    let currentTime = new Date();
+    let hours = currentTime.getHours();
+    let minutes = currentTime.getMinutes();
   </script>
 
   <svelte:head>
@@ -38,7 +42,7 @@
 >
   </svelte:head>
   
-  <div class="w-screen h-screen flex justify-center items-center relative">
+  <div class="w-screen h-screen flex justify-center items-center relative overflow-hidden">
     <div class="monitor absolute -z-10">
       <div class="start">
         <div class="start__button">
@@ -50,6 +54,7 @@
         </div>
         <div class="start__time">
           <p class="start__time-text">
+            {hours.toString().padStart(2, '0')}:{minutes.toString().padStart(2, '0')}
           </p>
         </div>
       </div>
@@ -144,7 +149,7 @@
       </div>
     </div>
 
-  <slot fill={fillColor}/>
+  <slot />
 
   </div>
 
@@ -168,8 +173,8 @@
 
     .monitor {
       position: absolute;
-      width: 100vw;
-      height: 100vh;
+      width: 100%;
+      height: 100%;
       background: #008080;
     }
 

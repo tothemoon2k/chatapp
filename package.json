@@ -4,8 +4,8 @@
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
-		"build": "vite build",
-		"preview": "vite preview"
+		"preview": "vite preview",
+		"build": "npm run build --output public"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^2.0.0",

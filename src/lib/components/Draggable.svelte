@@ -1,6 +1,6 @@
 <script>
-	export let left = 550;
-	export let top = 140;
+	export let left = 40;
+	export let top = 0;
 	
 	let moving = false;
 	
@@ -18,7 +18,6 @@
 	function onMouseUp() {
 		moving = false;
 	}
-	
 // 	$: console.log(moving);
 </script>
 
@@ -31,7 +30,7 @@
 	}
 </style>
 
-<section on:mousedown={onMouseDown} style="left: {left}px; top: {top}px;" class="draggable">
+<section on:mousedown={onMouseDown} style="left: {left === 40 ? '10%' : `${left}px`}; top: {top === 0 ? '10%' : `${top}px`};" class="draggable">
 	<slot></slot>
 </section>
 
