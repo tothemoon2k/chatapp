@@ -8,7 +8,7 @@
 		"build": {
 			"command": "npm run build",
 			"output": "public"
-		  },
+		  }
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^2.0.0",
