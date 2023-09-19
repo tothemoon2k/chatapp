@@ -212,7 +212,7 @@
         {#if buddyTab === "online"}
         <p class="font-bold chat-bt mb-1.5">Chats</p>
         {#if !chatsHAA.length}
-          <h1 class="text-center my-4">Your Messages Will Appear Here</h1>
+          <p class="text-center my-4">Your Messages Will Appear Here</p>
         {/if}
 
           {#each chatsHAA as chat (chat.latestMessage)}
