@@ -20,6 +20,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"delay": "^6.0.0",
 		"express": "^4.18.2",
 		"firebase": "^10.3.1",
 		"nodemon": "^3.0.1",
@@ -30,6 +31,7 @@
 		"puppeteer-extra-plugin-stealth": "^2.11.2",
 		"scss": "^0.2.4",
 		"unique-username-generator": "^1.2.0",
-		"uuid": "^9.0.1"
+		"uuid": "^9.0.1",
+		"zyte-smartproxy-plugin": "^1.0.8"
 	}
 }
