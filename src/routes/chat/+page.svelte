@@ -2,7 +2,9 @@
   import { onMount } from "svelte";
   import { db } from "$lib/firebase/firebase";
   import ChatWindow from "$lib/components/ChatWindow.svelte";
+  import InstagramChatWindow from "$lib/components/InstagramChatWindow.svelte";
   import chatSidebar from "$lib/images/chatSidebar.png";
+  import { io } from "$lib/realtime";
   import {
     setDoc,
     addDoc,
@@ -23,6 +25,11 @@
 
   onMount(() => {
     screenName = localStorage.getItem("screenName");
+    io.emit("loadChats")
+
+    io.on("sendChats", (chats) => {
+      console.log('we got em')
+    });
 
     const unsubscribe = onSnapshot(
         query(
@@ -154,6 +161,10 @@
     }, 50);
   }
 </script>
+
+
+<InstagramChatWindow otherUser={"justinfilms_"}/>
+
 
 {#if currentChat}
   <Draggable>
